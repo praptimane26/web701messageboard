@@ -2,15 +2,27 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const cors = require("cors");
 const MongoClient = require("mongodb").MongoClient;
+const mongoose = require("mongoose");
 
 const app = express();
 const port = 3000;
 const url = "mongodb://localhost:27017";
 const dbName = "messageBoard";
-let db;
+
 
 app.use(bodyParser.json());
 app.use(cors());
+
+const db = mongoose.connection;
+
+db.on("error", console.error.bind(console, "connection error:"));
+
+db.once("open", () => { console.log("connected to mongodb");
+});
+
+const MessageSchema = new mongoose.Schema({
+  name: String
+});
 
 app.post("/api/message", async (req, res) => {
   const message = req.body;
@@ -33,12 +45,7 @@ app.get("/api/message", async (req, res) => {
   res.json(docs);
 });
 
-MongoClient.connect(url, function (err, client) {
-  if (err) return console.log("mongodb error", err);
+mongoose.connect(url);
 
-  console.log("Connected successfully to server");
-
-  db = client.db(dbName);
-});
 
 app.listen(port, () => console.log("App running on port", port));
